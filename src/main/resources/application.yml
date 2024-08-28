@@ -1,0 +1,37 @@
+server.port: 8091
+eureka:
+  instance:
+    instance-id: ${spring.application.name}:@project.version@
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8090/eureka/
+
+application:
+  http-client:
+    security-jwt:
+      path: http://localhost:8085/auth/v1/token/validate
+
+spring:
+  application:
+    name: 'cloud-api-gateway'
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+      routes:
+        -
+          id: srv-neg-employee-configuration-v1
+          uri: lb://srv-neg-employee-configuration-v1
+          predicates:
+            - Path=/srv/neg/v1/employee-configuration/**
+        -
+          id: srv-neg-security-authentication-v1
+          uri: lb://srv-neg-security-authentication-v1
+          predicates:
+            - Path=/srv/neg/v1/security-authentication/**
+        -
+          id: srv-neg-audit-configuration-v1
+          uri: lb://srv-neg-audit-configuration-v1
+          predicates:
+            - Path=/srv/neg/v1/audit-configuration/**
