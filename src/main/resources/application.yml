@@ -4,12 +4,12 @@ eureka:
     instance-id: ${spring.application.name}:@project.version@
   client:
     serviceUrl:
-      defaultZone: http://localhost:8090/eureka/
+      defaultZone: http://localhost:8084/eureka/
 
 application:
   http-client:
-    security-jwt:
-      path: http://localhost:8085/auth/v1/token/validate
+    security-authentication:
+      path: http://localhost:8085/srv/neg/v1/security-authentication
 
 spring:
   application:
@@ -22,16 +22,20 @@ spring:
       routes:
         -
           id: srv-neg-employee-configuration-v1
-          uri: lb://srv-neg-employee-configuration-v1
+          uri: http://localhost:8081
           predicates:
             - Path=/srv/neg/v1/employee-configuration/**
         -
           id: srv-neg-security-authentication-v1
-          uri: lb://srv-neg-security-authentication-v1
+          uri: http://localhost:8085
           predicates:
             - Path=/srv/neg/v1/security-authentication/**
         -
           id: srv-neg-audit-configuration-v1
-          uri: lb://srv-neg-audit-configuration-v1
+          uri: http://localhost:8081
           predicates:
             - Path=/srv/neg/v1/audit-configuration/**
+
+logging:
+  level:
+    com.pe.relari: TRACE
