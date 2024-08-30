@@ -1,12 +1,10 @@
 package com.pe.relari.filter;
 
-import com.pe.relari.dao.api.SecurityAuthenticationApi;
-import com.pe.relari.model.api.TokenRequest;
-import com.pe.relari.util.Constants;
+import com.pe.relari.service.SecurityService;
+import com.pe.relari.util.Utility;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
@@ -20,34 +18,28 @@ import java.util.Objects;
 public class JwtAuthenticationFilter implements WebFilter {
 
     @Autowired
-    private SecurityAuthenticationApi authenticationApi;
+    private SecurityService securityService;
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
 
-        if (!exchange.getRequest().getHeaders().containsKey(HttpHeaders.AUTHORIZATION)) {
-            exchange.getResponse().setStatusCode(HttpStatus.BAD_REQUEST);
-        }
+        var headersRequest = exchange.getRequest().getHeaders();
+        var headerAuthorization = headersRequest.get(HttpHeaders.AUTHORIZATION);
 
-        String authHeader = Objects.requireNonNull(
-                exchange.getRequest().getHeaders().get(HttpHeaders.AUTHORIZATION)
-        ).get(0);
+        var headersResponse = exchange.getResponse().getHeaders();
 
-        if (authHeader!= null && authHeader.startsWith(Constants.TOKEN_HEADER)) {
-            authHeader = authHeader.substring(Constants.TOKEN_HEADER.length());
+        if (Objects.nonNull(headerAuthorization)) {
 
-            var request = new TokenRequest(authHeader);
+            String token = Utility.getToken(headerAuthorization);
 
-            authenticationApi.validate(request)
-                    .subscribe((validateResponse, throwable) -> {
-                        if (Boolean.FALSE.equals(validateResponse.getIsTokenExpired())) {
-                            log.debug("Token activo");
-                        } else {
-                            log.error("Error al validar el token", throwable);
-                            exchange.getResponse().setStatusCode(HttpStatus.FORBIDDEN);
+            securityService.validateToken(token)
+                    .subscribe(validateResponse -> {
+
+                        if (validateResponse != null) {
+                            headersResponse.setBearerAuth(token);
                         }
-                    })
-                    .dispose();
+
+                    }).dispose();
         }
 
         return chain.filter(exchange);

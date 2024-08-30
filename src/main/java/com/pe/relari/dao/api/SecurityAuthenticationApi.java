@@ -9,6 +9,8 @@ import retrofit2.http.POST;
 public interface SecurityAuthenticationApi {
 
     @POST("/srv/neg/v1/security-authentication/validate")
-    Single<ValidateResponse> validate(@Body TokenRequest request);
+    Single<ValidateResponse> validate(
+            @Body TokenRequest request
+    );
 
 }
