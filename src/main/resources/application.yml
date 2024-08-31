@@ -13,7 +13,17 @@ eureka:
 application:
   http-client:
     security-authentication:
-      path: http://localhost:8085/srv/neg/v1/security-authentication
+      base-url: http://localhost:8085
+      exclude-paths:
+        -
+          method: POST
+          path: /srv/neg/v1/security-authentication/generate
+        -
+          method: POST
+          path: /srv/neg/v1/security-authentication/validate
+        -
+          method: POST
+          path: /srv/neg/v1/security-authentication/users
 
 spring:
   application:

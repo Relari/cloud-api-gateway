@@ -16,11 +16,14 @@ import retrofit2.converter.gson.GsonConverterFactory;
 @Configuration
 public class RestConfiguration {
 
-  @Value("${application.http-client.security-authentication.path}")
-  private String uri;
+  private final SecurityAuthProperties securityAuthProperties;
 
   @Value("${logging.level.com.pe.relari}")
-  private String levelLogApp;
+  String levelLogApp;
+
+  public RestConfiguration(SecurityAuthProperties securityAuthProperties) {
+    this.securityAuthProperties = securityAuthProperties;
+  }
 
   private Retrofit retrofit() {
 
@@ -31,7 +34,7 @@ public class RestConfiguration {
     httpClient.addInterceptor(logging);
 
     return new Retrofit.Builder()
-        .baseUrl("http://localhost:8085")
+        .baseUrl(securityAuthProperties.getBaseUrl())
         .addConverterFactory(GsonConverterFactory.create())
         .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
         .client(httpClient.build())
