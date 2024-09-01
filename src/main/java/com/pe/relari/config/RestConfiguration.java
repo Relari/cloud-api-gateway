@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 import retrofit2.Retrofit;
-import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
+//import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 @Lazy
@@ -36,7 +36,7 @@ public class RestConfiguration {
     return new Retrofit.Builder()
         .baseUrl(securityAuthProperties.getBaseUrl())
         .addConverterFactory(GsonConverterFactory.create())
-        .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+//        .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
         .client(httpClient.build())
         .build();
   }
