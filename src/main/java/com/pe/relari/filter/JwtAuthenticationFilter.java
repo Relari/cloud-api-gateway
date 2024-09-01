@@ -1,63 +1,45 @@
 package com.pe.relari.filter;
 
 import com.pe.relari.config.SecurityAuthProperties;
-import com.pe.relari.service.SecurityService;
-import com.pe.relari.util.Utility;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
+import org.springframework.cloud.gateway.filter.GatewayFilterChain;
+import org.springframework.cloud.gateway.filter.GlobalFilter;
+import org.springframework.core.Ordered;
 import org.springframework.stereotype.Component;
-import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.server.ServerWebExchange;
-import org.springframework.web.server.WebFilter;
-import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
-
-import java.util.Objects;
 
 @Slf4j
 @Component
-public class JwtAuthenticationFilter implements WebFilter {
-
-    @Autowired
-    SecurityService securityService;
+public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
 
     @Autowired
     SecurityAuthProperties securityAuthProperties;
 
     @Override
-    public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
+    public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
 
         var request = exchange.getRequest();
+        var method = request.getMethodValue();
+        var path = request.getURI().getPath();
 
-        var headersRequest = request.getHeaders();
-        var headerAuthorization = headersRequest.get(HttpHeaders.AUTHORIZATION);
-
-        boolean validatePath = securityAuthProperties.validate(
-                request.getMethodValue(), request.getURI().getPath()
+        boolean isExcludedPath = securityAuthProperties.validate(
+                method, path
         );
 
-        if (Objects.isNull(headerAuthorization) && !validatePath) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "No contiene el token");
-        }
-
-        var headersResponse = exchange.getResponse().getHeaders();
-
-        if (Objects.nonNull(headerAuthorization) && validatePath) {
-
-            String token = Utility.getToken(headerAuthorization);
-
-            securityService.validateToken(token)
-                    .subscribe(validateResponse -> {
-
-                        if (validateResponse != null) {
-                            headersResponse.setBearerAuth(token);
-                        }
-
-                    }).dispose();
+        if (isExcludedPath) {
+            log.debug("Excluded route. [method={}, path={}]", method, path);
+        } else {
+            log.debug("Route with Token. [method={}, path={}]", method, path);
         }
 
         return chain.filter(exchange);
     }
+
+    @Override
+    public int getOrder() {
+        return -1;
+    }
+
 }
